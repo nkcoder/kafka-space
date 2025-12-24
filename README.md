@@ -1,3 +1,5 @@
-## Resources
+## Kafka
 
-- [kafka-beginners-course](https://github.com/conduktor/kafka-beginners-course)
+```sh
+docker compose -f docker-compose-cluster up -d
+```
