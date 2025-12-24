@@ -1,0 +1,184 @@
+# docker compose up -d
+# Generate a stable cluster ID once (example below) and reuse it everywhere:
+# docker run --rm apache/kafka-native:4.1.1 kafka-storage random-uuid
+# Replace q7b2L9ZfT7-Cluster-AAAAAA with your value.
+
+x-kafka-env: &kafka-common
+  KAFKA_CLUSTER_ID: q7b2L9ZfT7-Cluster-AAAAAA
+  KAFKA_GROUP_INITIAL_REBALANCE_DELAY_MS: "0"
+  KAFKA_HEAP_OPTS: "-Xms512m -Xmx1g"
+  TZ: Australia/Sydney
+
+networks:
+  kafka-net: {}
+
+volumes:
+  controller-1-data: {}
+  controller-2-data: {}
+  controller-3-data: {}
+  broker-1-data: {}
+  broker-2-data: {}
+  broker-3-data: {}
+
+services:
+  controller-1:
+    image: apache/kafka-native:4.1.1
+    container_name: controller-1
+    hostname: controller-1
+    environment:
+      <<: *kafka-common
+      KAFKA_NODE_ID: "1"
+      KAFKA_PROCESS_ROLES: controller
+      KAFKA_LISTENERS: CONTROLLER://:9093
+      KAFKA_CONTROLLER_LISTENER_NAMES: CONTROLLER
+      KAFKA_LISTENER_SECURITY_PROTOCOL_MAP: CONTROLLER:PLAINTEXT
+      KAFKA_CONTROLLER_QUORUM_VOTERS: 1@controller-1:9093,2@controller-2:9093,3@controller-3:9093
+    networks: [kafka-net]
+    volumes:
+      - controller-1-data:/var/lib/kafka/data
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "bash", "-lc", "nc -z localhost 9093"]
+      interval: 5s
+      timeout: 2s
+      retries: 30
+
+  controller-2:
+    image: apache/kafka-native:4.1.1
+    container_name: controller-2
+    hostname: controller-2
+    environment:
+      <<: *kafka-common
+      KAFKA_NODE_ID: "2"
+      KAFKA_PROCESS_ROLES: controller
+      KAFKA_LISTENERS: CONTROLLER://:9093
+      KAFKA_CONTROLLER_LISTENER_NAMES: CONTROLLER
+      KAFKA_LISTENER_SECURITY_PROTOCOL_MAP: CONTROLLER:PLAINTEXT
+      KAFKA_CONTROLLER_QUORUM_VOTERS: 1@controller-1:9093,2@controller-2:9093,3@controller-3:9093
+    networks: [kafka-net]
+    volumes:
+      - controller-2-data:/var/lib/kafka/data
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "bash", "-lc", "nc -z localhost 9093"]
+      interval: 5s
+      timeout: 2s
+      retries: 30
+
+  controller-3:
+    image: apache/kafka-native:4.1.1
+    container_name: controller-3
+    hostname: controller-3
+    environment:
+      <<: *kafka-common
+      KAFKA_NODE_ID: "3"
+      KAFKA_PROCESS_ROLES: controller
+      KAFKA_LISTENERS: CONTROLLER://:9093
+      KAFKA_CONTROLLER_LISTENER_NAMES: CONTROLLER
+      KAFKA_LISTENER_SECURITY_PROTOCOL_MAP: CONTROLLER:PLAINTEXT
+      KAFKA_CONTROLLER_QUORUM_VOTERS: 1@controller-1:9093,2@controller-2:9093,3@controller-3:9093
+    networks: [kafka-net]
+    volumes:
+      - controller-3-data:/var/lib/kafka/data
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "bash", "-lc", "nc -z localhost 9093"]
+      interval: 5s
+      timeout: 2s
+      retries: 30
+
+  broker-1:
+    image: apache/kafka-native:4.1.1
+    container_name: broker-1
+    hostname: broker-1
+    ports: ["29092:9092"]
+    environment:
+      <<: *kafka-common
+      KAFKA_NODE_ID: "4"
+      KAFKA_PROCESS_ROLES: broker
+      KAFKA_LISTENERS: "PLAINTEXT://:19092,PLAINTEXT_HOST://:9092"
+      KAFKA_ADVERTISED_LISTENERS: "PLAINTEXT://broker-1:19092,PLAINTEXT_HOST://localhost:29092"
+      KAFKA_LISTENER_SECURITY_PROTOCOL_MAP: "CONTROLLER:PLAINTEXT,PLAINTEXT:PLAINTEXT,PLAINTEXT_HOST:PLAINTEXT"
+      KAFKA_INTER_BROKER_LISTENER_NAME: PLAINTEXT
+      KAFKA_CONTROLLER_LISTENER_NAMES: CONTROLLER
+      KAFKA_CONTROLLER_QUORUM_VOTERS: 1@controller-1:9093,2@controller-2:9093,3@controller-3:9093
+      KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR: "3"
+      KAFKA_TRANSACTION_STATE_LOG_REPLICATION_FACTOR: "3"
+      KAFKA_TRANSACTION_STATE_LOG_MIN_ISR: "2"
+      KAFKA_DEFAULT_REPLICATION_FACTOR: "3"
+      KAFKA_MIN_INSYNC_REPLICAS: "2"
+    networks: [kafka-net]
+    volumes:
+      - broker-1-data:/var/lib/kafka/data
+    restart: unless-stopped
+    depends_on:
+      controller-1:
+        condition: service_healthy
+      controller-2:
+        condition: service_healthy
+      controller-3:
+        condition: service_healthy
+
+  broker-2:
+    image: apache/kafka-native:4.1.1
+    container_name: broker-2
+    hostname: broker-2
+    ports: ["39092:9092"]
+    environment:
+      <<: *kafka-common
+      KAFKA_NODE_ID: "5"
+      KAFKA_PROCESS_ROLES: broker
+      KAFKA_LISTENERS: "PLAINTEXT://:19092,PLAINTEXT_HOST://:9092"
+      KAFKA_ADVERTISED_LISTENERS: "PLAINTEXT://broker-2:19092,PLAINTEXT_HOST://localhost:39092"
+      KAFKA_LISTENER_SECURITY_PROTOCOL_MAP: "CONTROLLER:PLAINTEXT,PLAINTEXT:PLAINTEXT,PLAINTEXT_HOST:PLAINTEXT"
+      KAFKA_INTER_BROKER_LISTENER_NAME: PLAINTEXT
+      KAFKA_CONTROLLER_LISTENER_NAMES: CONTROLLER
+      KAFKA_CONTROLLER_QUORUM_VOTERS: 1@controller-1:9093,2@controller-2:9093,3@controller-3:9093
+      KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR: "3"
+      KAFKA_TRANSACTION_STATE_LOG_REPLICATION_FACTOR: "3"
+      KAFKA_TRANSACTION_STATE_LOG_MIN_ISR: "2"
+      KAFKA_DEFAULT_REPLICATION_FACTOR: "3"
+      KAFKA_MIN_INSYNC_REPLICAS: "2"
+    networks: [kafka-net]
+    volumes:
+      - broker-2-data:/var/lib/kafka/data
+    restart: unless-stopped
+    depends_on:
+      controller-1:
+        condition: service_healthy
+      controller-2:
+        condition: service_healthy
+      controller-3:
+        condition: service_healthy
+
+  broker-3:
+    image: apache/kafka-native:4.1.1
+    container_name: broker-3
+    hostname: broker-3
+    ports: ["49092:9092"]
+    environment:
+      <<: *kafka-common
+      KAFKA_NODE_ID: "6"
+      KAFKA_PROCESS_ROLES: broker
+      KAFKA_LISTENERS: "PLAINTEXT://:19092,PLAINTEXT_HOST://:9092"
+      KAFKA_ADVERTISED_LISTENERS: "PLAINTEXT://broker-3:19092,PLAINTEXT_HOST://localhost:49092"
+      KAFKA_LISTENER_SECURITY_PROTOCOL_MAP: "CONTROLLER:PLAINTEXT,PLAINTEXT:PLAINTEXT,PLAINTEXT_HOST:PLAINTEXT"
+      KAFKA_INTER_BROKER_LISTENER_NAME: PLAINTEXT
+      KAFKA_CONTROLLER_LISTENER_NAMES: CONTROLLER
+      KAFKA_CONTROLLER_QUORUM_VOTERS: 1@controller-1:9093,2@controller-2:9093,3@controller-3:9093
+      KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR: "3"
+      KAFKA_TRANSACTION_STATE_LOG_REPLICATION_FACTOR: "3"
+      KAFKA_TRANSACTION_STATE_LOG_MIN_ISR: "2"
+      KAFKA_DEFAULT_REPLICATION_FACTOR: "3"
+      KAFKA_MIN_INSYNC_REPLICAS: "2"
+    networks: [kafka-net]
+    volumes:
+      - broker-3-data:/var/lib/kafka/data
+    restart: unless-stopped
+    depends_on:
+      controller-1:
+        condition: service_healthy
+      controller-2:
+        condition: service_healthy
+      controller-3:
+        condition: service_healthy
