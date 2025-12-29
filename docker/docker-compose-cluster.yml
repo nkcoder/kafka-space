@@ -5,6 +5,7 @@
 
 x-kafka-env: &kafka-common
   KAFKA_CLUSTER_ID: q7b2L9ZfT7-Cluster-AAAAAA
+  KAFKA_LOG_DIRS: /var/lib/kafka/data   # defaults to /tmp/kafka-logs
   KAFKA_GROUP_INITIAL_REBALANCE_DELAY_MS: "0"
   KAFKA_HEAP_OPTS: "-Xms512m -Xmx1g"
   TZ: Australia/Sydney
