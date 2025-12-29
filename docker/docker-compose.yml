@@ -23,7 +23,4 @@ services:
       KAFKA_CONTROLLER_QUORUM_VOTERS: 1@localhost:9093
       KAFKA_NUM_PARTITIONS: 3
     volumes:
-      - kafka-data:/var/lib/kafka/data
-
-volumes:
-  kafka-data:
+      - ./.data/single-node:/var/lib/kafka/data

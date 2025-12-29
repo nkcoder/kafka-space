@@ -1,7 +1,11 @@
+# Kafka
 kafka_2.13-4.1.1/
+docker/.data/
+
+# Editor
 .DS_Store
 
-# Scala files
+# Scala project files
 **/.idea
 **/build
 **/target
