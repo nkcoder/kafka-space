@@ -3,10 +3,14 @@ kafka_2.13-4.1.1/
 docker/.data/
 
 # Editor
-.DS_Store
+**/.DS_Store
 
 # Scala project files
 **/.idea
 **/build
 **/target
 **/.bsp
+**/.bloop
+**/project/
+**/.metals/
+**/.gradle/

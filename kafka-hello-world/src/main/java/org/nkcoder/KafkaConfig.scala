@@ -7,20 +7,20 @@ import org.apache.kafka.common.serialization.{StringDeserializer, StringSerializ
 import java.util.Properties
 
 object KafkaConfig:
-  private val BootstrapServers = "localhost:9092"
-  val Topic = "hello-kafka"
+  private val bootstrapServers = "localhost:29092,localhost:39092"
+  val topic = "test-topic-1"
 
   def producerProperties: Properties =
     val props = Properties()
 
     // Required configurations
-    props.put(ProducerConfig.BOOTSTRAP_SERVERS_CONFIG, BootstrapServers)
+    props.put(ProducerConfig.BOOTSTRAP_SERVERS_CONFIG, bootstrapServers)
     props.put(ProducerConfig.KEY_SERIALIZER_CLASS_CONFIG, classOf[StringSerializer].getName)
     props.put(ProducerConfig.VALUE_SERIALIZER_CLASS_CONFIG, classOf[StringSerializer].getName)
 
     // Reliability configurations
     props.put(ProducerConfig.ACKS_CONFIG, "all") // Wait for all replicas
-    props.put(ProducerConfig.ENABLE_IDEMPOTENCE_CONFIG, "true") // Exactly-once semantics
+    props.put(ProducerConfig.ENABLE_IDEMPOTENCE_CONFIG, "true")
 
     // Performance tuning
     props.put(ProducerConfig.LINGER_MS_CONFIG, "5") // Small batching delay
@@ -37,7 +37,7 @@ object KafkaConfig:
     val props = Properties()
 
     // Required configurations
-    props.put(ConsumerConfig.BOOTSTRAP_SERVERS_CONFIG, BootstrapServers)
+    props.put(ConsumerConfig.BOOTSTRAP_SERVERS_CONFIG, bootstrapServers)
     props.put(ConsumerConfig.KEY_DESERIALIZER_CLASS_CONFIG, classOf[StringDeserializer].getName)
     props.put(ConsumerConfig.VALUE_DESERIALIZER_CLASS_CONFIG, classOf[StringDeserializer].getName)
     props.put(ConsumerConfig.GROUP_ID_CONFIG, groupId)

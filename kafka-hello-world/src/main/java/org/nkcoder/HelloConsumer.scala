@@ -1,14 +1,12 @@
 package org.nkcoder
 
-import org.apache.kafka.clients.consumer.{ConsumerRecord, ConsumerRecords, KafkaConsumer, OffsetAndMetadata}
-import org.apache.kafka.common.TopicPartition
+import org.apache.kafka.clients.consumer.{ConsumerRecord, ConsumerRecords, KafkaConsumer}
 import org.apache.kafka.common.errors.WakeupException
 import org.slf4j.LoggerFactory
 
 import java.time.{Duration, Instant}
 import java.util.concurrent.atomic.AtomicBoolean
 import scala.jdk.CollectionConverters.*
-import scala.util.Using
 
 object HelloConsumer:
 
@@ -29,33 +27,28 @@ object HelloConsumer:
       consumer.wakeup() // Interrupt any blocking poll
     }))
 
-    try
-      // Subscribe to topic
-      consumer.subscribe(List(KafkaConfig.Topic).asJava)
-      logger.info(s"Subscribed to topic '${KafkaConfig.Topic}'")
+    // Subscribe to topic
+    consumer.subscribe(List(KafkaConfig.topic).asJava)
+    logger.info(s"Subscribed to topic '${KafkaConfig.topic}'")
 
-      // Main poll loop
-      while keepRunning.get() do
-        try
-          val records: ConsumerRecords[String, String] = consumer.poll(Duration.ofMillis(1000))
-
-          if !records.isEmpty then
-            processRecords(records)
-
-            // Manual commit after successful processing
-            consumer.commitSync()
-            logger.debug(s"Committed offsets for ${records.count()} records")
-
-        catch
-          case _: WakeupException if !keepRunning.get() =>
-            logger.info("Consumer wakeup for shutdown")
-          case ex: Exception =>
-            logger.error(s"Error in poll loop: ${ex.getMessage}", ex)
-
-        finally
-          logger.info("Closing consumer...")
-      consumer.close()
-      logger.info("Consumer closed successfully")
+    // Main poll loop
+    while keepRunning.get() do
+      try
+        val records: ConsumerRecords[String, String] = consumer.poll(Duration.ofMillis(1000))
+        if !records.isEmpty then
+          processRecords(records)
+          // Manual commit after successful processing
+          consumer.commitSync()
+          logger.debug(s"Committed offsets for ${records.count()} records")
+      catch
+        case _: WakeupException if !keepRunning.get() =>
+          logger.info("Consumer wakeup for shutdown")
+        case ex: Exception =>
+          logger.error(s"Error in poll loop: ${ex.getMessage}", ex)
+      finally
+        logger.info("Closing consumer...")
+    consumer.close()
+    logger.info("Consumer closed successfully")
 
   /** Process a batch of records */
   private def processRecords(records: ConsumerRecords[String, String]): Unit =
